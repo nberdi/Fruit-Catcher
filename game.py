@@ -23,6 +23,20 @@ class Game:
         # new created fruits
         self.created_fruits = []
         
+        # font for text
+        self.font = pygame.font.SysFont(None, 36)
+        
+        # score and lives 
+        self.score = 0
+        self.lives = 3
+        
+        
+    def display_score_and_lives(self):
+        score_text = self.font.render(f"Score: {self.score}", True, (255, 255, 255))
+        self.screen.blit(score_text, (10, 10))
+        for i in range(self.lives):
+            self.screen.blit(self.heart_img, (10 + i * 35, 50))  # hearts under score
+        
     def create_new_fruit(self):
         # create fruits every 1 second
         current_time = pygame.time.get_ticks()
@@ -40,7 +54,6 @@ class Game:
             self.display_created_fruit(fruit)
             fruit["y"] += self.fruit_speed
         
-                
     def display_created_fruit(self, fruit):
         self.screen.blit(fruit["img"], (fruit["x"], fruit["y"]))
         
@@ -56,13 +69,16 @@ class Game:
             
             self.screen.fill((172, 209, 175))
             
-            # to move the bucket right and left
-            self.move() 
-            # display bucket
+            # display the bucket
             self.screen.blit(self.bucket_img, (self.bucket_x, 450))
+            # to move the bucket right or left
+            self.move() 
             
-            # create a fruit and display on the screen
+            # create a new fruit and display it on the screen
             self.create_new_fruit()
+            
+            # display score and lives
+            self.display_score_and_lives()
             
             self.clock.tick(120)
             pygame.display.update()
