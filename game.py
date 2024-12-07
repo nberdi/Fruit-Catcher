@@ -25,11 +25,36 @@ class Game:
         
         # font for text
         self.font = pygame.font.SysFont(None, 36)
+        self.header_font = pygame.font.SysFont(None, 72)
         
         # score and lives 
         self.score = 0
         self.lives = 3
         
+        # game over
+        self.game_over = False
+        
+    def display_game_over(self):
+        # Game over text
+        game_over_text = self.header_font.render("Game Over", True, (255, 255, 255))
+        self.screen.blit(game_over_text, (225, 150))
+
+        # Final score
+        final_score_text = self.font.render(f"Your Score: {self.score}", True, (255, 255, 255))
+        self.screen.blit(final_score_text, (275, 230))
+
+        # restart button
+        restart_text = self.font.render("Restart", True, (255, 255, 255))
+        restart_rect = pygame.Rect(300, 300, 100, 50)
+        pygame.draw.rect(self.screen, (0, 0, 0), restart_rect)
+        self.screen.blit(restart_text, (310, 310))
+
+        # quit button
+        quit_text = self.font.render("Quit", True, (255, 255, 255))
+        quit_rect = pygame.Rect(300, 370, 100, 50)
+        pygame.draw.rect(self.screen, (0, 0, 0), quit_rect)
+        self.screen.blit(quit_text, (322, 380))
+
     def check_collision(self, fruit):
         bucket_rect = pygame.Rect(self.bucket_x, 450, 50, 50)
         fruit_rect = pygame.Rect(fruit["x"], fruit["y"], 40, 40)
@@ -70,7 +95,7 @@ class Game:
                     self.lives -= 1
 
             if self.lives == 0:
-                pygame.quit()      
+                self.game_over = True     
         
     def display_created_fruit(self, fruit):
         self.screen.blit(fruit["img"], (fruit["x"], fruit["y"]))
@@ -87,16 +112,19 @@ class Game:
             
             self.screen.fill((172, 209, 175))
             
-            # display the bucket
-            self.screen.blit(self.bucket_img, (self.bucket_x, 450))
-            # to move the bucket right or left
-            self.move() 
+            if not self.game_over:
+                # display the bucket
+                self.screen.blit(self.bucket_img, (self.bucket_x, 450))
+                # to move the bucket right or left
+                self.move() 
+                
+                # create a new fruit and display it on the screen
+                self.create_new_fruit()
             
-            # create a new fruit and display it on the screen
-            self.create_new_fruit()
-            
-            # display score and lives
-            self.display_score_and_lives()
+                # display score and lives
+                self.display_score_and_lives()
+            else:
+                self.display_game_over()
             
             self.clock.tick(120)
             pygame.display.update()
