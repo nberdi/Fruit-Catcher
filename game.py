@@ -30,6 +30,10 @@ class Game:
         self.score = 0
         self.lives = 3
         
+    def check_collision(self, fruit):
+        bucket_rect = pygame.Rect(self.bucket_x, 450, 50, 50)
+        fruit_rect = pygame.Rect(fruit["x"], fruit["y"], 40, 40)
+        return bucket_rect.colliderect(fruit_rect)
         
     def display_score_and_lives(self):
         score_text = self.font.render(f"Score: {self.score}", True, (255, 255, 255))
@@ -46,6 +50,7 @@ class Game:
                 "x": random.randint(0, 660),
                 "y": 0,
                 "img": self.bomb_img if is_bomb else random.choice(self.fruit_imgs),
+                "is_bomb": is_bomb
             }
             self.created_fruits.append(new_fruit)
             self.last_fruit_time = current_time
@@ -53,6 +58,19 @@ class Game:
         for fruit in self.created_fruits[:]:
             self.display_created_fruit(fruit)
             fruit["y"] += self.fruit_speed
+            if self.check_collision(fruit):
+                if fruit["is_bomb"]:
+                    self.lives -= 1
+                else:
+                    self.score += 1
+                self.created_fruits.remove(fruit)
+            elif fruit["y"] > 500:
+                self.created_fruits.remove(fruit)
+                if not fruit["is_bomb"]:
+                    self.lives -= 1
+
+            if self.lives == 0:
+                pygame.quit()      
         
     def display_created_fruit(self, fruit):
         self.screen.blit(fruit["img"], (fruit["x"], fruit["y"]))
