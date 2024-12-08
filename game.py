@@ -7,7 +7,6 @@ class Game:
         
         # imgs
         self.bucket_img = pygame.transform.scale(bucket_img, (50, 50))
-        self.bucket_x = 335  # center
         self.bucket_speed = 5
         
         self.fruit_imgs = [pygame.transform.scale(img, (40, 40)) for img in fruit_list]
@@ -16,30 +15,32 @@ class Game:
         
         # time
         self.clock = pygame.time.Clock()
-        self.last_fruit_time = 0
         self.fruit_interval = 1000
         self.fruit_speed = 1
-        
-        # new created fruits
-        self.created_fruits = []
         
         # font for text
         self.font = pygame.font.SysFont(None, 36)
         self.header_font = pygame.font.SysFont(None, 72)
         
+        self.reset_game()
+        
+    def reset_game(self):
+        # new created fruits
+        self.created_fruits = []
+        self.last_fruit_time = 0
+        self.bucket_x = 335  # center
         # score and lives 
         self.score = 0
         self.lives = 3
-        
         # game over
         self.game_over = False
         
     def display_game_over(self):
-        # Game over text
+        # game over text
         game_over_text = self.header_font.render("Game Over", True, (255, 255, 255))
         self.screen.blit(game_over_text, (225, 150))
 
-        # Final score
+        # final score
         final_score_text = self.font.render(f"Your Score: {self.score}", True, (255, 255, 255))
         self.screen.blit(final_score_text, (275, 230))
 
@@ -54,6 +55,8 @@ class Game:
         quit_rect = pygame.Rect(300, 370, 100, 50)
         pygame.draw.rect(self.screen, (0, 0, 0), quit_rect)
         self.screen.blit(quit_text, (322, 380))
+        
+        return restart_rect, quit_rect
 
     def check_collision(self, fruit):
         bucket_rect = pygame.Rect(self.bucket_x, 450, 50, 50)
@@ -124,14 +127,21 @@ class Game:
                 # display score and lives
                 self.display_score_and_lives()
             else:
-                self.display_game_over()
-            
+                restart_rect, quit_rect = self.display_game_over()
+                
             self.clock.tick(120)
             pygame.display.update()
             
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
+                    
+                if self.game_over and event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+                    if restart_rect.collidepoint(mouse_pos):
+                        self.reset_game()  # restart the game
+                    if quit_rect.collidepoint(mouse_pos):
+                        pygame.quit()
                     
                     
 if __name__ == "__main__":
