@@ -34,7 +34,70 @@ class Game:
         self.lives = 3
         # game over
         self.game_over = False
-        
+    
+    def show_start_screen(self):
+        while True:
+            self.screen.fill((172, 209, 175))
+            # header
+            title = self.header_font.render("Fruit Catcher", True, (255, 255, 255))
+            self.screen.blit(title, (195, 100))
+
+            # start button
+            start_text = self.font.render("Start", True, (255, 255, 255))
+            start_rect = pygame.Rect(300, 220, 100, 50)
+            pygame.draw.rect(self.screen, (0, 128, 255), start_rect)
+            self.screen.blit(start_text, (322, 233))
+
+            # rules button
+            rules_text = self.font.render("Rules", True, (255, 255, 255))
+            rules_rect = pygame.Rect(300, 290, 100, 50)
+            pygame.draw.rect(self.screen, (0, 128, 255), rules_rect)
+            self.screen.blit(rules_text, (317, 303))
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if start_rect.collidepoint(event.pos):
+                        return  
+                    if rules_rect.collidepoint(event.pos):
+                        self.show_rules_screen()
+
+            pygame.display.update()
+
+    def show_rules_screen(self):
+        rules_text = [
+            "1. Move the bucket using LEFT and RIGHT arrow keys.",
+            "2. Catch fruits to gain points.",
+            "3. Avoid bombs! You lose a life if you hit one.",
+            "4. Missing a fruit also costs you a life.",
+            "5. The game ends when you lose all lives.",
+        ]
+
+        while True:
+            self.screen.fill((172, 209, 175))
+            title_text = self.header_font.render("Game Rules", True, (255, 255, 255))
+            self.screen.blit(title_text, (210, 50))
+
+            # display each rule
+            for i, rule in enumerate(rules_text):
+                rule_text = self.font.render(rule, True, (255, 255, 255))
+                self.screen.blit(rule_text, (30, 150 + i * 40))
+
+            back_text = self.font.render("Back", True, (255, 255, 255))
+            back_rect = pygame.Rect(300, 400, 100, 50)
+            pygame.draw.rect(self.screen, (0, 128, 255), back_rect)
+            self.screen.blit(back_text, (322, 412))
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if back_rect.collidepoint(event.pos):
+                        return
+
+            pygame.display.update()  
+
     def display_game_over(self):
         # game over text
         game_over_text = self.header_font.render("Game Over", True, (255, 255, 255))
@@ -111,8 +174,10 @@ class Game:
             self.bucket_x += self.bucket_speed
         
     def run(self):
+        if self.show_start_screen():
+            pass
+        
         while True:
-            
             self.screen.fill((172, 209, 175))
             
             if not self.game_over:
