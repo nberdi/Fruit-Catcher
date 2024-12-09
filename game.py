@@ -4,6 +4,12 @@ import random
 class Game:
     def __init__(self):
         self.screen = pygame.display.set_mode((screen_width, screen_height))
+        pygame.display.set_caption("Fruit Catcher")
+        
+        # initialize mixer
+        pygame.mixer.init()
+        pygame.mixer.music.load("sound/game_song.mp3")  # load your song
+        pygame.mixer.music.set_volume(0.5)  # setting volume (0.0 to 1.0)
         
         # imgs
         self.bucket_img = pygame.transform.scale(bucket_img, (50, 50))
@@ -13,6 +19,11 @@ class Game:
         self.bomb_img = pygame.transform.scale(bomb_img, (40, 40))
         self.heart_img = pygame.transform.scale(heart_img, (30, 30))
         
+        self.return_to_menu_img = pygame.image.load("imgs/return_to_menu.png")
+        self.return_to_menu_img = pygame.transform.scale(self.return_to_menu_img, (30, 30))
+        self.return_to_menu = True
+    
+    
         # time
         self.clock = pygame.time.Clock()
         self.fruit_interval = 1000
@@ -21,7 +32,8 @@ class Game:
         # font for text
         self.font = pygame.font.SysFont(None, 36)
         self.header_font = pygame.font.SysFont(None, 72)
-        
+        self.highest_score = 0
+                
         self.reset_game()
         
     def reset_game(self):
@@ -59,7 +71,7 @@ class Game:
                     pygame.quit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if start_rect.collidepoint(event.pos):
-                        return  
+                        return True
                     if rules_rect.collidepoint(event.pos):
                         self.show_rules_screen()
 
@@ -106,6 +118,10 @@ class Game:
         # final score
         final_score_text = self.font.render(f"Your Score: {self.score}", True, (255, 255, 255))
         self.screen.blit(final_score_text, (275, 230))
+        
+        # highest score 
+        highest_score_text = self.font.render(f"Highest Score: {self.highest_score}", True, (255, 255, 255))
+        self.screen.blit(highest_score_text, (260, 260))
 
         # restart button
         restart_text = self.font.render("Restart", True, (255, 255, 255))
@@ -130,7 +146,17 @@ class Game:
         score_text = self.font.render(f"Score: {self.score}", True, (255, 255, 255))
         self.screen.blit(score_text, (10, 10))
         for i in range(self.lives):
-            self.screen.blit(self.heart_img, (10 + i * 35, 50))  # hearts under score
+            self.screen.blit(self.heart_img, (10 + i * 35, 50))  # hearts under score 
+            
+            self.screen.blit(self.return_to_menu_img, (660, 10))  # top right corner
+            return_to_menu_rect = pygame.Rect(660, 10, 30, 30)
+            
+            # check if the left mouse button is pressed
+            mouse_buttons = pygame.mouse.get_pressed()
+            mouse_pos = pygame.mouse.get_pos()
+
+            if mouse_buttons[0] and return_to_menu_rect.collidepoint(mouse_pos):  # Left button and within rect
+                return True
         
     def create_new_fruit(self):
         # create fruits every 1 second
@@ -174,13 +200,24 @@ class Game:
             self.bucket_x += self.bucket_speed
         
     def run(self):
-        if self.show_start_screen():
-            pass
+        
+        # play the music in a loop
+        pygame.mixer.music.play(-1)  
         
         while True:
             self.screen.fill((172, 209, 175))
             
+            if self.return_to_menu:
+                if self.show_start_screen():
+                    self.reset_game()
+                    self.return_to_menu = False
+                    self.game_over = False
+            
             if not self.game_over:
+                # save highest score
+                if self.score > self.highest_score:
+                    self.highest_score = self.score
+                                    
                 # display the bucket
                 self.screen.blit(self.bucket_img, (self.bucket_x, 450))
                 # to move the bucket right or left
@@ -190,9 +227,12 @@ class Game:
                 self.create_new_fruit()
             
                 # display score and lives
-                self.display_score_and_lives()
+                if self.display_score_and_lives():
+                    self.return_to_menu = True
+                    self.game_over = True
             else:
-                restart_rect, quit_rect = self.display_game_over()
+                if not self.return_to_menu:
+                    restart_rect, quit_rect = self.display_game_over()
                 
             self.clock.tick(120)
             pygame.display.update()
@@ -207,8 +247,8 @@ class Game:
                         self.reset_game()  # restart the game
                     if quit_rect.collidepoint(mouse_pos):
                         pygame.quit()
-                    
-                    
+
+
 if __name__ == "__main__":
     game = Game()
     game.run()
