@@ -8,8 +8,15 @@ class Game:
         
         # initialize mixer
         pygame.mixer.init()
-        pygame.mixer.music.load("sound/game_song.mp3")  # load your song
+        pygame.mixer.music.load("sounds/game_song.mp3")  # load your song
         pygame.mixer.music.set_volume(0.5)  # setting volume (0.0 to 1.0)
+        
+        # bomb sound
+        self.bomb_sound = pygame.mixer.Sound("sounds/bomb.mp3")
+        # score sound
+        self.score_sound = pygame.mixer.Sound("sounds/coin.mp3")
+        # lost life sound
+        self.lost_life_sound = pygame.mixer.Sound("sounds/lost_life.mp3")
         
         # imgs
         self.bucket_img = pygame.transform.scale(bucket_img, (50, 50))
@@ -22,7 +29,13 @@ class Game:
         self.return_to_menu_img = pygame.image.load("imgs/return_to_menu.png")
         self.return_to_menu_img = pygame.transform.scale(self.return_to_menu_img, (30, 30))
         self.return_to_menu = True
-    
+
+        
+        self.volume = pygame.image.load("imgs/volume.png")
+        self.volume = pygame.transform.scale(self.volume, (30, 30))
+        self.mute = pygame.image.load("imgs/mute.png")
+        self.mute = pygame.transform.scale(self.mute, (30, 30))
+        self.is_mute = False
     
         # time
         self.clock = pygame.time.Clock()
@@ -65,6 +78,14 @@ class Game:
             rules_rect = pygame.Rect(300, 290, 100, 50)
             pygame.draw.rect(self.screen, (0, 128, 255), rules_rect)
             self.screen.blit(rules_text, (317, 303))
+            
+            # mute the song
+            if not self.is_mute:
+                self.screen.blit(self.volume, (650, 10))
+            volume_rect = pygame.Rect(650, 10, 30, 30)
+            
+            if self.is_mute:
+                self.screen.blit(self.mute, (650, 10))                
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -74,6 +95,13 @@ class Game:
                         return True
                     if rules_rect.collidepoint(event.pos):
                         self.show_rules_screen()
+                    if volume_rect.collidepoint(event.pos):
+                        self.is_mute = not self.is_mute
+                    # play the music in a loop
+                    if self.is_mute:
+                        pygame.mixer.music.stop()  # Stop music
+                    else:
+                        pygame.mixer.music.play(-1)  
 
             pygame.display.update()
 
@@ -113,29 +141,33 @@ class Game:
     def display_game_over(self):
         # game over text
         game_over_text = self.header_font.render("Game Over", True, (255, 255, 255))
-        self.screen.blit(game_over_text, (225, 150))
+        self.screen.blit(game_over_text, (225, 100))
 
         # final score
         final_score_text = self.font.render(f"Your Score: {self.score}", True, (255, 255, 255))
-        self.screen.blit(final_score_text, (275, 230))
+        self.screen.blit(final_score_text, (275, 180))
         
         # highest score 
         highest_score_text = self.font.render(f"Highest Score: {self.highest_score}", True, (255, 255, 255))
-        self.screen.blit(highest_score_text, (260, 260))
+        self.screen.blit(highest_score_text, (260, 230))
 
         # restart button
         restart_text = self.font.render("Restart", True, (255, 255, 255))
         restart_rect = pygame.Rect(300, 300, 100, 50)
-        pygame.draw.rect(self.screen, (0, 0, 0), restart_rect)
+        pygame.draw.rect(self.screen, (0, 128, 255), restart_rect)
         self.screen.blit(restart_text, (310, 310))
 
         # quit button
         quit_text = self.font.render("Quit", True, (255, 255, 255))
         quit_rect = pygame.Rect(300, 370, 100, 50)
-        pygame.draw.rect(self.screen, (0, 0, 0), quit_rect)
+        pygame.draw.rect(self.screen, (0, 128, 255), quit_rect)
         self.screen.blit(quit_text, (322, 380))
         
-        return restart_rect, quit_rect
+        # return to menu
+        self.screen.blit(self.return_to_menu_img, (660, 10))  # top right corner
+        return_to_menu_rect = pygame.Rect(660, 10, 30, 30)
+        
+        return restart_rect, quit_rect, return_to_menu_rect
 
     def check_collision(self, fruit):
         bucket_rect = pygame.Rect(self.bucket_x, 450, 50, 50)
@@ -155,7 +187,7 @@ class Game:
             mouse_buttons = pygame.mouse.get_pressed()
             mouse_pos = pygame.mouse.get_pos()
 
-            if mouse_buttons[0] and return_to_menu_rect.collidepoint(mouse_pos):  # Left button and within rect
+            if mouse_buttons[0] and return_to_menu_rect.collidepoint(mouse_pos):  # left button and within rect
                 return True
         
     def create_new_fruit(self):
@@ -177,13 +209,17 @@ class Game:
             fruit["y"] += self.fruit_speed
             if self.check_collision(fruit):
                 if fruit["is_bomb"]:
+                    self.bomb_sound.play()
                     self.lives -= 1
+                    self.lost_life_sound.play()
                 else:
+                    self.score_sound.play()
                     self.score += 1
                 self.created_fruits.remove(fruit)
             elif fruit["y"] > 500:
                 self.created_fruits.remove(fruit)
                 if not fruit["is_bomb"]:
+                    self.lost_life_sound.play()
                     self.lives -= 1
 
             if self.lives == 0:
@@ -200,11 +236,14 @@ class Game:
             self.bucket_x += self.bucket_speed
         
     def run(self):
-        
         # play the music in a loop
-        pygame.mixer.music.play(-1)  
+        if not self.is_mute:
+            pygame.mixer.music.play(-1)  
+        else:
+            pygame.mixer.music.stop()
         
         while True:
+
             self.screen.fill((172, 209, 175))
             
             if self.return_to_menu:
@@ -217,7 +256,7 @@ class Game:
                 # save highest score
                 if self.score > self.highest_score:
                     self.highest_score = self.score
-                                    
+                    
                 # display the bucket
                 self.screen.blit(self.bucket_img, (self.bucket_x, 450))
                 # to move the bucket right or left
@@ -232,8 +271,8 @@ class Game:
                     self.game_over = True
             else:
                 if not self.return_to_menu:
-                    restart_rect, quit_rect = self.display_game_over()
-                
+                    restart_rect, quit_rect, return_to_menu_rect = self.display_game_over()
+                    
             self.clock.tick(120)
             pygame.display.update()
             
@@ -247,6 +286,8 @@ class Game:
                         self.reset_game()  # restart the game
                     if quit_rect.collidepoint(mouse_pos):
                         pygame.quit()
+                    if return_to_menu_rect.collidepoint(mouse_pos):
+                        self.return_to_menu = True
 
 
 if __name__ == "__main__":
