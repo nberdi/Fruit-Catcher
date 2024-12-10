@@ -126,59 +126,13 @@ class Game:
 
             pygame.display.update()  
 
-    def display_game_over(self):
-        # game over text
-        game_over_text = self.header_font.render("Game Over", True, (255, 255, 255))
-        self.screen.blit(game_over_text, (225, 100))
+    def move(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] and self.bucket_x > 0:
+            self.bucket_x -= self.bucket_speed
+        if keys[pygame.K_RIGHT] and self.bucket_x < self.screen.get_width() - 50:
+            self.bucket_x += self.bucket_speed
 
-        # final score
-        final_score_text = self.font.render(f"Your Score: {self.score}", True, (255, 255, 255))
-        self.screen.blit(final_score_text, (275, 180))
-        
-        # highest score 
-        highest_score_text = self.font.render(f"Highest Score: {self.highest_score}", True, (255, 255, 255))
-        self.screen.blit(highest_score_text, (260, 230))
-
-        # restart button
-        restart_text = self.font.render("Restart", True, (255, 255, 255))
-        restart_rect = pygame.Rect(300, 300, 100, 50)
-        pygame.draw.rect(self.screen, (0, 128, 255), restart_rect)  # draw restart_text btn with blue bg color
-        self.screen.blit(restart_text, (310, 310))  # put restart_text on top of the btn
-
-        # quit button
-        quit_text = self.font.render("Quit", True, (255, 255, 255))
-        quit_rect = pygame.Rect(300, 370, 100, 50)
-        pygame.draw.rect(self.screen, (0, 128, 255), quit_rect) # draw quit_text btn with blue bg color
-        self.screen.blit(quit_text, (322, 380)) # put quit_text on top of the btn
-        
-        # return to menu
-        self.screen.blit(self.return_to_menu_img, (660, 10))  # top right corner
-        return_to_menu_rect = pygame.Rect(660, 10, 30, 30)
-        
-        return restart_rect, quit_rect, return_to_menu_rect
-
-    def check_collision(self, fruit):
-        bucket_rect = pygame.Rect(self.bucket_x, 450, 50, 50)
-        fruit_rect = pygame.Rect(fruit["x"], fruit["y"], 40, 40)
-        return bucket_rect.colliderect(fruit_rect)
-        
-    def display_score_and_lives(self):
-        score_text = self.font.render(f"Score: {self.score}", True, (255, 255, 255))
-        self.screen.blit(score_text, (10, 10))
-        
-        for i in range(self.lives):
-            self.screen.blit(self.heart_img, (10 + i * 35, 50))  # hearts under score 
-            
-        self.screen.blit(self.return_to_menu_img, (660, 10))  # top right corner
-        return_to_menu_rect = pygame.Rect(660, 10, 30, 30)
-        
-        # check if the left mouse button is pressed
-        mouse_buttons = pygame.mouse.get_pressed()
-        mouse_pos = pygame.mouse.get_pos()
-
-        if mouse_buttons[0] and return_to_menu_rect.collidepoint(mouse_pos):  # left button and within rect
-            return True
-        
     def create_new_fruit(self):
         # create fruits every 1 second
         current_time = pygame.time.get_ticks()
@@ -213,17 +167,63 @@ class Game:
 
             if self.lives == 0:
                 self.game_over = True     
-        
+
     def display_created_fruit(self, fruit):
         self.screen.blit(fruit["img"], (fruit["x"], fruit["y"]))
+
+    def check_collision(self, fruit):
+        bucket_rect = pygame.Rect(self.bucket_x, 450, 50, 50)
+        fruit_rect = pygame.Rect(fruit["x"], fruit["y"], 40, 40)
+        return bucket_rect.colliderect(fruit_rect)
+
+    def display_score_and_lives(self):
+        score_text = self.font.render(f"Score: {self.score}", True, (255, 255, 255))
+        self.screen.blit(score_text, (10, 10))
         
-    def move(self):
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] and self.bucket_x > 0:
-            self.bucket_x -= self.bucket_speed
-        if keys[pygame.K_RIGHT] and self.bucket_x < self.screen.get_width() - 50:
-            self.bucket_x += self.bucket_speed
+        for i in range(self.lives):
+            self.screen.blit(self.heart_img, (10 + i * 35, 50))  # hearts under score 
+            
+        self.screen.blit(self.return_to_menu_img, (660, 10))  # top right corner
+        return_to_menu_rect = pygame.Rect(660, 10, 30, 30)
         
+        # check if the left mouse button is pressed
+        mouse_buttons = pygame.mouse.get_pressed()
+        mouse_pos = pygame.mouse.get_pos()
+
+        if mouse_buttons[0] and return_to_menu_rect.collidepoint(mouse_pos):  # left button and within rect
+            return True
+
+    def display_game_over(self):
+        # game over text
+        game_over_text = self.header_font.render("Game Over", True, (255, 255, 255))
+        self.screen.blit(game_over_text, (225, 100))
+
+        # final score
+        final_score_text = self.font.render(f"Your Score: {self.score}", True, (255, 255, 255))
+        self.screen.blit(final_score_text, (275, 180))
+        
+        # highest score 
+        highest_score_text = self.font.render(f"Highest Score: {self.highest_score}", True, (255, 255, 255))
+        self.screen.blit(highest_score_text, (260, 230))
+
+        # restart button
+        restart_text = self.font.render("Restart", True, (255, 255, 255))
+        restart_rect = pygame.Rect(300, 300, 100, 50)
+        pygame.draw.rect(self.screen, (0, 128, 255), restart_rect)  # draw restart_text btn with blue bg color
+        self.screen.blit(restart_text, (310, 310))  # put restart_text on top of the btn
+
+        # quit button
+        quit_text = self.font.render("Quit", True, (255, 255, 255))
+        quit_rect = pygame.Rect(300, 370, 100, 50)
+        pygame.draw.rect(self.screen, (0, 128, 255), quit_rect) # draw quit_text btn with blue bg color
+        self.screen.blit(quit_text, (322, 380)) # put quit_text on top of the btn
+        
+        # return to menu
+        self.screen.blit(self.return_to_menu_img, (660, 10))  # top right corner
+        return_to_menu_rect = pygame.Rect(660, 10, 30, 30)
+        
+        return restart_rect, quit_rect, return_to_menu_rect
+
     def run(self):
         # play the music in a loop
         if not self.is_mute:
