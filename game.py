@@ -1,6 +1,7 @@
 from settings import *
 import random
 
+
 class Game:
     def __init__(self):
         self.screen = pygame.display.set_mode((screen_width, screen_height))
@@ -114,8 +115,8 @@ class Game:
             # back button
             back_text = self.font.render("Back", True, (255, 255, 255))
             back_rect = pygame.Rect(300, 400, 100, 50)
-            pygame.draw.rect(self.screen, (0, 128, 255), back_rect) # draw back btn with blue bg color
-            self.screen.blit(back_text, (322, 412)) # put back_text on top of the btn
+            pygame.draw.rect(self.screen, (0, 128, 255), back_rect)     # draw back btn with blue bg color
+            self.screen.blit(back_text, (322, 412))     # put back_text on top of the btn
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -215,8 +216,8 @@ class Game:
         # quit button
         quit_text = self.font.render("Quit", True, (255, 255, 255))
         quit_rect = pygame.Rect(300, 370, 100, 50)
-        pygame.draw.rect(self.screen, (0, 128, 255), quit_rect) # draw quit_text btn with blue bg color
-        self.screen.blit(quit_text, (322, 380)) # put quit_text on top of the btn
+        pygame.draw.rect(self.screen, (0, 128, 255), quit_rect)     # draw quit_text btn with blue bg color
+        self.screen.blit(quit_text, (322, 380))     # put quit_text on top of the btn
         
         # return to menu
         self.screen.blit(self.return_to_menu_img, (660, 10))  # top right corner
