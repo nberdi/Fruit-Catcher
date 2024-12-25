@@ -25,10 +25,10 @@ volume = pygame.image.load("imgs/volume.png")
 mute = pygame.image.load("imgs/mute.png")
 
 # sounds
-game_song = "sounds/game_song.mp3"
-bomb_sound = "sounds/bomb.mp3"
-score_sound = "sounds/coin.mp3"
-lost_life_sound = "sounds/lost_life.mp3"
+game_song = "sounds/game_song.wav"
+bomb_sound = "sounds/bomb.wav"
+score_sound = "sounds/coin.wav"
+lost_life_sound = "sounds/lost_life.wav"
 
 rules_text = [
     "1. Move the bucket using LEFT and RIGHT arrow keys.",
