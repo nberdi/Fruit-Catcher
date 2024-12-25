@@ -1,5 +1,5 @@
 from settings import *
-import random
+import random, asyncio
 
 
 class Game:
@@ -19,7 +19,7 @@ class Game:
         
         # imgs
         self.bucket_img = pygame.transform.scale(bucket_img, (50, 50))
-        self.bucket_speed = 5
+        self.bucket_speed = 10
         
         self.fruit_imgs = [pygame.transform.scale(img, (40, 40)) for img in fruit_list]
         self.bomb_img = pygame.transform.scale(bomb_img, (40, 40))
@@ -30,12 +30,12 @@ class Game:
 
         self.volume = pygame.transform.scale(volume, (30, 30))
         self.mute = pygame.transform.scale(mute, (30, 30))
-        self.is_mute = False
+        self.is_mute = True
     
         # time
         self.clock = pygame.time.Clock()
         self.fruit_interval = 1000
-        self.fruit_speed = 1
+        self.fruit_speed = 2
         
         # font for text
         self.font = pygame.font.SysFont(None, 36)
@@ -53,7 +53,7 @@ class Game:
         self.lives = 3
         self.game_over = False  # game over
     
-    def show_start_screen(self):
+    async def show_start_screen(self):
         while True:
             self.screen.fill(screen_bg_color)   # bg color (light green)
             
@@ -77,30 +77,30 @@ class Game:
             volume_rect = pygame.Rect(650, 10, 30, 30)
             if not self.is_mute:
                 self.screen.blit(self.volume, (650, 10))
-            
-            if self.is_mute:
-                self.screen.blit(self.mute, (650, 10))                
+            else:
+                self.screen.blit(self.mute, (650, 10))
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
+                    return False
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if start_rect.collidepoint(event.pos):
                         return True
                     if rules_rect.collidepoint(event.pos):
-                        self.show_rules_screen()
+                        await self.show_rules_screen()
                     if volume_rect.collidepoint(event.pos):
                         self.is_mute = not self.is_mute
-                        
-                    # play the music in a loop
-                    if self.is_mute:
-                        pygame.mixer.music.stop()  # stop music
-                    else:
-                        pygame.mixer.music.play(-1)  
+                        # play the music in a loop
+                        if self.is_mute:
+                            pygame.mixer.music.stop()  # stop music
+                        else:
+                            pygame.mixer.music.play(-1)  
 
-            pygame.display.update()
+            pygame.display.flip()
+            await asyncio.sleep(0)
 
-    def show_rules_screen(self):
+    async def show_rules_screen(self):
         while True:
             self.screen.fill(screen_bg_color)   # bg color (light green)
             
@@ -125,7 +125,8 @@ class Game:
                     if back_rect.collidepoint(event.pos):
                         return
 
-            pygame.display.update()  
+            pygame.display.flip()
+            await asyncio.sleep(0)
 
     def move(self):
         keys = pygame.key.get_pressed()
@@ -212,73 +213,65 @@ class Game:
         restart_rect = pygame.Rect(300, 300, 100, 50)
         pygame.draw.rect(self.screen, (0, 128, 255), restart_rect)  # draw restart_text btn with blue bg color
         self.screen.blit(restart_text, (310, 310))  # put restart_text on top of the btn
-
-        # quit button
-        quit_text = self.font.render("Quit", True, (255, 255, 255))
-        quit_rect = pygame.Rect(300, 370, 100, 50)
-        pygame.draw.rect(self.screen, (0, 128, 255), quit_rect)     # draw quit_text btn with blue bg color
-        self.screen.blit(quit_text, (322, 380))     # put quit_text on top of the btn
         
         # return to menu
         self.screen.blit(self.return_to_menu_img, (660, 10))  # top right corner
         return_to_menu_rect = pygame.Rect(660, 10, 30, 30)
         
-        return restart_rect, quit_rect, return_to_menu_rect
+        return restart_rect, return_to_menu_rect
+    
+    async def game_loop(self):
+        if not self.game_over:
+            if self.score > self.highest_score:
+                self.highest_score = self.score
+                
+            self.screen.blit(self.bucket_img, (self.bucket_x, 450))
+            self.move()
+            self.create_new_fruit()
+        
+            if self.display_score_and_lives():
+                self.return_to_menu = True
+                self.game_over = True
+        else:
+            if not self.return_to_menu:
+                self.restart_rect, self.return_to_menu_rect = self.display_game_over()
 
-    def run(self):
-        # play the music in a loop
+    async def run(self):
         if not self.is_mute:
-            pygame.mixer.music.play(-1)  
+            pygame.mixer.music.play(-1)
         else:
             pygame.mixer.music.stop()
         
         while True:
-            self.screen.fill(screen_bg_color)   # bg color (light green)
+            self.screen.fill(screen_bg_color)
             
             if self.return_to_menu:
-                if self.show_start_screen():
+                menu_result = await self.show_start_screen()
+                if menu_result:
                     self.reset_game()
                     self.return_to_menu = False
                     self.game_over = False
-            
-            if not self.game_over:
-                # save highest score
-                if self.score > self.highest_score:
-                    self.highest_score = self.score
-                    
-                # display the bucket
-                self.screen.blit(self.bucket_img, (self.bucket_x, 450))
-                # to move the bucket right or left
-                self.move() 
-                
-                # create a new fruit and display it on the screen
-                self.create_new_fruit()
-            
-                # display score and lives
-                if self.display_score_and_lives():
-                    self.return_to_menu = True
-                    self.game_over = True
             else:
-                if not self.return_to_menu:
-                    restart_rect, quit_rect, return_to_menu_rect = self.display_game_over()
-                    
+                await self.game_loop()
+            
             self.clock.tick(120)
-            pygame.display.update()
+            pygame.display.flip()
             
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
+                    return
                     
                 if self.game_over and event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
-                    if restart_rect.collidepoint(mouse_pos):
+                    if self.restart_rect.collidepoint(mouse_pos):
                         self.reset_game()  # restart the game
-                    if quit_rect.collidepoint(mouse_pos):
-                        pygame.quit()
-                    if return_to_menu_rect.collidepoint(mouse_pos):
+                    if self.return_to_menu_rect.collidepoint(mouse_pos):
                         self.return_to_menu = True
+            
+            await asyncio.sleep(0)
 
 
 if __name__ == "__main__":
     game = Game()
-    game.run()
+    asyncio.run(game.run())
